@@ -1,0 +1,109 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from tabulate import tabulate
+from datetime import datetime, timedelta
+import random
+
+print("🚀 Starting Advanced Inventory Simulation...\n")
+
+# ----- Inventory setup -----
+inventory = pd.DataFrame({
+    "Product": ["Laptop", "Smartphone", "Headphones", "Monitor", "Tablet"],
+    "Stock": [10, 25, 50, 15, 20],
+    "Price": [1200, 800, 150, 300, 400]
+})
+
+# ----- Sales simulation -----
+days = 7
+dates = [datetime.today() - timedelta(days=i) for i in range(days)][::-1]
+
+# Generar ventas sin valores repetidos (por día y por producto)
+sales_data = {"Date": [d.strftime("%Y-%m-%d") for d in dates]}
+for product in inventory["Product"]:
+    max_sales = min(inventory.loc[inventory["Product"] == product, "Stock"].values[0], 5)
+    daily_sales = random.sample(range(0, max_sales + 1), days) if days <= max_sales + 1 else \
+                  [random.randint(0, max_sales) for _ in range(days)]
+    sales_data[product] = daily_sales
+
+sales_history = pd.DataFrame(sales_data)
+
+# ----- Apply sales to inventory day by day & generate alerts -----
+low_stock_threshold = 5
+alerts_by_day = {}
+previous_alerts = {}
+inventory_evolution = pd.DataFrame(columns=["Product", "Stock", "Price", "Day"])
+
+# ✅ Guardar inventario inicial como día 0
+initial_inventory = inventory.copy()
+initial_inventory["Day"] = 0
+inventory_evolution = pd.concat([inventory_evolution, initial_inventory], ignore_index=True)
+
+# ---- Bucle de simulación ----
+for day_idx, row in sales_history.iterrows():
+    date = row["Date"]
+    daily_alerts = []
+    
+    for product in inventory["Product"]:
+        sold = row[product]
+        current_stock = inventory.loc[inventory["Product"] == product, "Stock"].values[0]
+        new_stock = max(current_stock - sold, 0)
+        inventory.loc[inventory["Product"] == product, "Stock"] = new_stock
+
+        # Comprobar alertas
+        alert_condition = new_stock <= low_stock_threshold
+        previous_condition = previous_alerts.get(product, None)
+        if alert_condition and previous_condition != new_stock:
+            daily_alerts.append(f"⚠️ {product}: {new_stock} units left")
+            previous_alerts[product] = new_stock
+
+    if daily_alerts:
+        alerts_by_day[date] = daily_alerts
+
+    # Guardar evolución de inventario después del día actual
+    temp = inventory.copy()
+    temp["Day"] = day_idx + 1
+    inventory_evolution = pd.concat([inventory_evolution, temp], ignore_index=True)
+
+# ----- Display inventory -----
+print("📦 Current Inventory:\n")
+print(tabulate(inventory, headers='keys', tablefmt='fancy_grid'))
+
+# ----- Display sales history -----
+print("\n📝 Sales History (last 7 days):\n")
+print(tabulate(sales_history, headers='keys', tablefmt='fancy_grid'))
+
+# ----- Display alerts -----
+if alerts_by_day:
+    print("\n🚨 Alerts by Day:\n")
+    for date, alerts in alerts_by_day.items():
+        print(f"📅 {date}:")
+        for alert in alerts:
+            print(f"   {alert}")
+else:
+    print("\n✅ No alerts. Stock levels are sufficient.")
+
+# ----- Plot current inventory -----
+plt.figure(figsize=(8,5))
+plt.bar(inventory["Product"], inventory["Stock"], color='skyblue')
+plt.title("📦 Current Inventory Stock")
+plt.ylabel("Units in Stock")
+plt.xlabel("Product")
+for idx, val in enumerate(inventory["Stock"]):
+    plt.text(idx, val + 0.5, str(val), ha='center', fontweight='bold')
+plt.show()
+
+# ----- Plot inventory evolution -----
+plt.figure(figsize=(10,6))
+for product in inventory["Product"]:
+    product_data = inventory_evolution[inventory_evolution["Product"] == product]
+    plt.plot(product_data["Day"], product_data["Stock"], marker='o', label=product)
+
+plt.title("📈 Inventory Evolution Over Days")
+plt.xlabel("Day")
+plt.ylabel("Stock Units")
+plt.xticks(range(0, days + 1))
+plt.legend()
+plt.grid(alpha=0.3)
+plt.show()
+
+print("\n🎉 Inventory simulation completed!")
