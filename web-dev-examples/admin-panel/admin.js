@@ -1,6 +1,8 @@
 // ----------- GLOBAL VARIABLE AND STATUS MAPPING -----------
-let currentStatus = 'pending';  // Logical frontend status
+// Global variable to track the current tab/status in the absences section
+let currentStatus = 'pending';
 
+// Mapping valid statuses for absences
 const validStatuses = {
   pending: 'pending',
   approved: 'approved',
@@ -8,49 +10,49 @@ const validStatuses = {
 };
 
 // ----------- GENERAL FUNCTIONS AND FORMS -----------
+// Wait for the DOM to fully load using jQuery
+$(document).ready(function() {
 
-document.addEventListener('DOMContentLoaded', () => {
-  // --- Sidebar navigation ---
-  const menuLinks = document.querySelectorAll('.sidebar a');
-  const contentSections = document.querySelectorAll('.section-content');
+  // --- Sidebar navigation using jQuery ---
+  const $menuLinks = $('.sidebar a');        // Select all sidebar links
+  const $contentSections = $('.section-content'); // All content sections
 
+  // Function to display the active section
   function showSection(id) {
-    contentSections.forEach(s => s.classList.remove('active'));
-    const target = document.getElementById(id);
-    if (target) target.classList.add('active');
+    $contentSections.removeClass('active');  // Remove 'active' from all sections
+    $(`#${id}`).addClass('active');          // Add 'active' only to the selected section
   }
 
-  function setActiveLink(link) {
-    menuLinks.forEach(l => l.classList.remove('active'));
-    link.classList.add('active');
+  // Mark the active link in the sidebar
+  function setActiveLink($link) {
+    $menuLinks.removeClass('active'); // Remove active class from all links
+    $link.addClass('active');         // Mark the clicked link as active
   }
 
-  menuLinks.forEach(l => l.addEventListener('click', e => {
-    e.preventDefault();
-    showSection(l.dataset.section);
-    setActiveLink(l);
-  }));
+  // Click event on sidebar links
+  $menuLinks.click(function(e) {
+    e.preventDefault();               // Prevent default link behavior (page reload)
+    const $link = $(this);            // $(this) refers to the clicked link (jQuery object)
+    showSection($link.data('section'));
+    setActiveLink($link);
+  });
+
+  // Show default section on page load
   showSection('schedule-view');
 
-  // --- Dynamic loading ---
+  // --- Dynamic loading of users and schedules ---
   async function loadUsers() {
     try {
-      const res = await fetch('/api/usuarios');
+      const res = await fetch('/api/usuarios'); // Fetch users from API
       const users = await res.json();
 
-      const selectModify = document.getElementById('usuarioModificar');
-      const selectCreate = document.getElementById('select-usuario');
-
-      [selectModify, selectCreate].forEach(select => {
-        if (select) {
-          select.innerHTML = '<option value="">Select...</option>';
-          users.forEach(u => {
-            const opt = document.createElement('option');
-            opt.value = u.id_usuario;
-            opt.textContent = `${u.id_usuario} – ${u.nombre}`;
-            select.appendChild(opt);
-          });
-        }
+      // Populate select elements using jQuery
+      const selects = $('#usuarioModificar, #select-usuario');
+      selects.each(function() {          // Iterate over each select
+        $(this).empty().append('<option value="">Select...</option>'); // Clear options
+        users.forEach(u => {
+          $(this).append(`<option value="${u.id_usuario}">${u.id_usuario} – ${u.nombre}</option>`);
+        });
       });
     } catch (err) {
       console.error('Error loading users:', err);
@@ -62,17 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('/api/horario');
       const schedules = await res.json();
 
-      const selectIds = ['idHorarioModificar', 'select-eliminar'];
-
+      const selectIds = ['#idHorarioModificar', '#select-eliminar'];
       selectIds.forEach(id => {
-        const select = document.getElementById(id);
-        if (select) {
-          select.innerHTML = '<option value="">Select...</option>';
+        const $select = $(id);          // jQuery selection of the element
+        if ($select.length) {
+          $select.empty().append('<option value="">Select...</option>'); // Reset options
           schedules.forEach(h => {
-            const opt = document.createElement('option');
-            opt.value = h.id_horario;
-            opt.textContent = `${h.id_horario} – User: ${h.nombre}`;
-            select.appendChild(opt);
+            $select.append(`<option value="${h.id_horario}">${h.id_horario} – User: ${h.nombre}</option>`);
           });
         }
       });
@@ -85,45 +83,51 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const res = await fetch('/api/horario');
       const data = await res.json();
-      const tbody = document.querySelector('#adminScheduleTable tbody');
-      tbody.innerHTML = '';
+      const $tbody = $('#adminScheduleTable tbody'); // Select tbody with jQuery
+      $tbody.empty();                                // Clear existing rows
 
+      // Create table rows dynamically using jQuery
       data.forEach(h => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${h.id_horario}</td>
-          <td>${h.nombre}</td>
-          <td>${h.lunes || '-'}</td><td>${h.martes || '-'}</td><td>${h.miercoles || '-'}</td>
-          <td>${h.jueves || '-'}</td><td>${h.viernes || '-'}</td><td>${h.sabado || '-'}</td>
-          <td>${h.domingo || '-'}</td>
-        `;
-        tbody.appendChild(row);
+        const $row = $(`
+          <tr>
+            <td>${h.id_horario}</td>
+            <td>${h.nombre}</td>
+            <td>${h.lunes || '-'}</td><td>${h.martes || '-'}</td><td>${h.miercoles || '-'}</td>
+            <td>${h.jueves || '-'}</td><td>${h.viernes || '-'}</td><td>${h.sabado || '-'}</td>
+            <td>${h.domingo || '-'}</td>
+          </tr>
+        `);
+        $tbody.append($row.hide().fadeIn(300)); // jQuery fade-in animation for better UX
       });
     } catch (err) {
       console.error('Error loading admin schedules:', err);
     }
   }
 
+  // Load initial data
   loadUsers();
   loadSchedules();
   loadSchedulesAdmin();
 
-  // --- FORMS ---
+  // ----------- FORMS MANAGEMENT -----------
+
+  // User creation form using jQuery
   class UserForm {
     constructor(sel) {
-      this.form = document.querySelector(sel);
-      if (this.form) this.init();
+      this.$form = $(sel);            // jQuery form reference
+      if (this.$form.length) this.init();
     }
+
     init() {
-      this.form.addEventListener('submit', async e => {
-        e.preventDefault();
-        const name = document.getElementById('nombreAlta').value.trim();
-        const email = document.getElementById('emailAlta').value.trim();
-        const password = document.getElementById('passwordAlta').value;
-        const startDate = document.getElementById('fechaAlta').value;
+      this.$form.submit(async e => {
+        e.preventDefault();           // Prevent default form submission
+        const name = $('#nombreAlta').val().trim();
+        const email = $('#emailAlta').val().trim();
+        const password = $('#passwordAlta').val();
+        const startDate = $('#fechaAlta').val();
 
         if (!name || !email || !password || !startDate) {
-          alert('All fields are required');
+          alert('All fields are required'); // Basic frontend validation
           return;
         }
 
@@ -136,11 +140,9 @@ document.addEventListener('DOMContentLoaded', () => {
           const data = await res.json();
           if (res.ok) {
             alert(`User ${name} created successfully`);
-            this.form.reset();
-            loadUsers();
-          } else {
-            alert(`Error creating user: ${data.mensaje}`);
-          }
+            this.$form.trigger('reset'); // Reset form using jQuery
+            loadUsers();                 // Reload users select
+          } else alert(`Error creating user: ${data.mensaje}`);
         } catch (err) {
           console.error('Error creating user:', err);
         }
@@ -148,16 +150,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // User modification form
   class ModifyUserForm {
     constructor(sel) {
-      this.form = document.querySelector(sel);
-      if (this.form) this.init();
+      this.$form = $(sel);
+      if (this.$form.length) this.init();
     }
+
     init() {
-      this.form.addEventListener('submit', async e => {
+      this.$form.submit(async e => {
         e.preventDefault();
-        const id = this.form.querySelector('#usuarioModificar').value;
-        const newName = this.form.querySelector('#nuevoNombre').value.trim();
+        const id = this.$form.find('#usuarioModificar').val();
+        const newName = this.$form.find('#nuevoNombre').val().trim();
         if (!id) return alert('Please select a user');
 
         try {
@@ -169,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const data = await res.json();
           if (res.ok) {
             alert(data.mensaje);
-            this.form.reset();
+            this.$form.trigger('reset');
             loadUsers();
           } else alert(`Error: ${data.mensaje}`);
         } catch (err) {
@@ -179,17 +183,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // User deletion form
   class DeleteUserForm {
     constructor(sel) {
-      this.form = document.querySelector(sel);
-      if (this.form) this.init();
+      this.$form = $(sel);
+      if (this.$form.length) this.init();
     }
+
     init() {
-      this.form.addEventListener('submit', async e => {
+      this.$form.submit(async e => {
         e.preventDefault();
-        const id = this.form.querySelector('#idUsuarioEliminar').value.trim();
-        const name = this.form.querySelector('#nombreUsuarioEliminar').value.trim();
-        const email = this.form.querySelector('#emailUsuarioEliminar').value.trim();
+        const id = this.$form.find('#idUsuarioEliminar').val().trim();
+        const name = this.$form.find('#nombreUsuarioEliminar').val().trim();
+        const email = this.$form.find('#emailUsuarioEliminar').val().trim();
 
         if (!id || !name || !email) {
           alert('Please complete all three fields');
@@ -205,9 +211,9 @@ document.addEventListener('DOMContentLoaded', () => {
           const data = await res.json();
           if (res.ok) {
             alert(data.mensaje);
-            this.form.reset();
+            this.$form.trigger('reset');
             loadUsers();
-          } else alert(`Error deleting user: ${data.mensaje}`);
+          } else alert(`Error: ${data.mensaje}`);
         } catch (err) {
           console.error('Error deleting user:', err);
         }
@@ -215,18 +221,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ------ SCHEDULE -----
-  const formCreate = document.getElementById('form-crear');
+  // ----------- SCHEDULE FORMS MANAGEMENT -----------
 
+  const $formCreate = $('#form-crear'); // Schedule creation form
+
+  // Validate schedule for allowed free days and annual hours
   function validateSchedule(schedule, maxHours) {
     const days = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'];
-
-    // Detect free days
     const freeDays = days.filter(day => {
       const val = schedule[day];
       return !val || val.trim().toLowerCase() === '' || val.trim().toLowerCase() === 'libre';
     });
 
+    // Define valid blocks of free days
     const validBlocks = [
       ['lunes', 'martes'],
       ['miercoles', 'jueves'],
@@ -243,25 +250,20 @@ document.addEventListener('DOMContentLoaded', () => {
       return false;
     }
 
-    // Calculate weekly hours
+    // Calculate weekly and annual hours
     const weeklyHours = days.reduce((acc, day) => {
       const val = schedule[day];
       if (!val || val.trim().toLowerCase() === 'libre') return acc;
-
       const parts = val.split('-');
       if (parts.length !== 2) return acc;
-
       const [start, end] = parts.map(t => {
         const [h, m] = t.split(':').map(Number);
         return h + (m || 0) / 60;
       });
-
       return acc + Math.max(0, end - start);
     }, 0);
 
-    const weeksPerYear = 52;
-    const annualHours = weeklyHours * weeksPerYear;
-
+    const annualHours = weeklyHours * 52;
     if (annualHours > maxHours) {
       alert(`This schedule generates ${annualHours.toFixed(1)} annual hours, exceeding the limit of ${maxHours}h.`);
       return false;
@@ -270,22 +272,15 @@ document.addEventListener('DOMContentLoaded', () => {
     return true;
   }
 
-  formCreate?.addEventListener('submit', async (e) => {
+  // Schedule creation form submission
+  $formCreate?.submit(async e => {
     e.preventDefault();
-    const formData = new FormData(formCreate);
     const body = {};
-    formData.forEach((value, key) => {
-      body[key] = value.trim();
-    });
+    new FormData($formCreate[0]).forEach((v, k) => body[k] = v.trim()); // Convert form to object
 
-    // Mandatory validation
-    const requiredFields = ['id_usuario', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo', 'fecha_inicio', 'fecha_fin'];
-    for (const field of requiredFields) {
-      if (!body[field]) {
-        alert(`Missing field: ${field}`);
-        return;
-      }
-    }
+    // Check required fields
+    const requiredFields = ['id_usuario','lunes','martes','miercoles','jueves','viernes','sabado','domingo','fecha_inicio','fecha_fin'];
+    for (const f of requiredFields) if (!body[f]) return alert(`Missing field: ${f}`);
 
     try {
       const resUser = await fetch(`/api/usuarios/${body.id_usuario}`);
@@ -297,40 +292,37 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('/api/horario', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(body)
       });
-
       const data = await res.json();
       if (res.ok) {
         alert('Schedule created successfully');
-        formCreate.reset();
+        $formCreate.trigger('reset');
         loadSchedules();
         loadSchedulesAdmin();
-      } else {
-        alert(`Error: ${data.mensaje}`);
-      }
+      } else alert(`Error: ${data.mensaje}`);
     } catch (err) {
       console.error('Error creating schedule:', err);
       alert(`Error creating schedule: ${err.message || 'unknown'}`);
     }
   });
 
+  // ----------- MODIFY AND DELETE SCHEDULE FORMS USING JQUERY -----------
+
   class ModifyScheduleForm {
     constructor(sel) {
-      this.form = document.querySelector(sel);
-      if (this.form) this.init();
+      this.$form = $(sel);
+      if (this.$form.length) this.init();
     }
-    init() {
-      this.form.addEventListener('submit', async e => {
-        e.preventDefault();
-        const scheduleId = this.form.querySelector('#idHorarioModificar').value;
-        const day = this.form.querySelector('#diaModificar').value;
-        const newSchedule = this.form.querySelector('#nuevoHorario').value;
 
-        if (!scheduleId || !day || !newSchedule) {
-          alert('Complete all fields');
-          return;
-        }
+    init() {
+      this.$form.submit(async e => {
+        e.preventDefault();
+        const scheduleId = this.$form.find('#idHorarioModificar').val();
+        const day = this.$form.find('#diaModificar').val();
+        const newSchedule = this.$form.find('#nuevoHorario').val();
+
+        if (!scheduleId || !day || !newSchedule) return alert('Complete all fields');
 
         try {
           const res = await fetch(`/api/horario/${scheduleId}`, {
@@ -341,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const data = await res.json();
           if (res.ok) {
             alert(data.mensaje);
-            this.form.reset();
+            this.$form.trigger('reset');
             loadSchedules();
           } else alert(`Error: ${data.mensaje}`);
         } catch (err) {
@@ -353,43 +345,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   class DeleteScheduleForm {
     constructor(sel) {
-      this.form = document.querySelector(sel);
-      this.select = this.form?.querySelector('#select-eliminar');
-      this.msg = this.form?.querySelector('#msgEliminar');
-      if (this.form && this.select) this.init();
+      this.$form = $(sel);
+      this.$select = this.$form?.find('#select-eliminar'); // Select element for choosing schedule
+      this.$msg = this.$form?.find('#msgEliminar');       // Message element for feedback
+      if (this.$form.length && this.$select.length) this.init();
     }
 
     init() {
-      this.form.addEventListener('submit', async e => {
+      this.$form.submit(async e => {
         e.preventDefault();
-        const scheduleId = this.select.value;
-
+        const scheduleId = this.$select.val();
         if (!scheduleId) {
-          this.msg.textContent = 'Please select a valid ID.';
-          this.msg.className = 'text-danger mt-2';
+          this.$msg.text('Please select a valid ID').removeClass().addClass('text-danger mt-2');
           return;
         }
 
-        const confirmed = confirm(`Are you sure you want to delete schedule ID ${scheduleId}?`);
-        if (!confirmed) return;
+        if (!confirm(`Are you sure you want to delete schedule ID ${scheduleId}?`)) return;
 
         try {
           const res = await fetch(`/api/horario/${scheduleId}`, { method: 'DELETE' });
           const data = await res.json();
           if (res.ok) {
-            this.msg.textContent = data.mensaje || 'Schedule deleted successfully.';
-            this.msg.className = 'text-success mt-2';
-            this.form.reset();
+            this.$msg.text(data.mensaje || 'Schedule deleted successfully').removeClass().addClass('text-success mt-2');
+            this.$form.trigger('reset');
             loadSchedules();
             this.loadSelect();
           } else {
-            this.msg.textContent = data.mensaje || 'Could not delete.';
-            this.msg.className = 'text-danger mt-2';
+            this.$msg.text(data.mensaje || 'Could not delete').removeClass().addClass('text-danger mt-2');
           }
         } catch (err) {
           console.error('Error deleting schedule:', err);
-          this.msg.textContent = 'Error deleting schedule.';
-          this.msg.className = 'text-danger mt-2';
+          this.$msg.text('Error deleting schedule').removeClass().addClass('text-danger mt-2');
         }
       });
 
@@ -398,62 +384,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async loadSelect() {
       try {
-        const res = await fetch('/api/horarios'); // adjust if different
+        const res = await fetch('/api/horarios');
         const data = await res.json();
-
-        if (Array.isArray(data)) {
-          this.select.innerHTML = '<option value="">Select a schedule</option>';
+        this.$select.empty();
+        if (Array.isArray(data) && data.length) {
+          this.$select.append('<option value="">Select a schedule</option>');
           data.forEach(h => {
-            const option = document.createElement('option');
-            option.value = h.id; // or h._id depending on backend
-            option.textContent = `ID: ${h.id} | Day: ${h.dia} | Time: ${h.horario}`;
-            this.select.appendChild(option);
+            this.$select.append(`<option value="${h.id}">ID: ${h.id} | Day: ${h.dia} | Time: ${h.horario}</option>`);
           });
-        } else {
-          this.select.innerHTML = '<option value="">No schedules available</option>';
-        }
+        } else this.$select.append('<option value="">No schedules available</option>');
       } catch (err) {
         console.error('Error loading schedules:', err);
-        this.select.innerHTML = '<option value="">Error loading</option>';
+        this.$select.append('<option value="">Error loading</option>');
       }
     }
   }
 
+  // Initialize all forms
   new UserForm('.user-form');
   new ModifyUserForm('.modify-user-form');
   new DeleteUserForm('.delete-user-form');
   new ModifyScheduleForm('.modificar-horario-form');
   new DeleteScheduleForm('#form-eliminar');
 
-  // ----------- ABSENCES: TABS AND MANAGEMENT -----------
-  const absenceTabs = document.querySelectorAll('#ausenciasC .nav-tabs .nav-link');
+  // ----------- ABSENCES TABS AND MANAGEMENT -----------
 
-  function handleTabClick(e) {
+  const $absenceTabs = $('#ausenciasC .nav-tabs .nav-link');
+
+  // Tab click handler using jQuery
+  $absenceTabs.click(function(e) {
     e.preventDefault();
-    absenceTabs.forEach(tab => tab.classList.remove('active'));
-    e.target.classList.add('active');
-    currentStatus = e.target.dataset.estado;  // Update global variable
-    loadAbsences(currentStatus);
-  }
+    $absenceTabs.removeClass('active'); // Remove active from all tabs
+    $(this).addClass('active');         // Set clicked tab as active
+    currentStatus = $(this).data('estado'); // Update current logical status
+    loadAbsences(currentStatus);        // Reload absences for this status
+  });
 
-  absenceTabs.forEach(tab => tab.addEventListener('click', handleTabClick));
+  // Load initial absences
   loadAbsences(currentStatus);
 });
 
-// ----------- FUNCTIONS FOR ABSENCES MANAGEMENT -----------
+// ----------- ABSENCES MANAGEMENT FUNCTION -----------
+
+// Fetch and display absences according to the tab status
 async function loadAbsences(tabStatus) {
-  const status = validStatuses[tabStatus] || 'pending';  // Map to backend format
+  const status = validStatuses[tabStatus] || 'pending';
   try {
     const res = await fetch(`/api/ausencias?estado=${status}`);
     const absences = await res.json();
-    const tbody = document.getElementById('ausenciasBody');
-    tbody.innerHTML = '';
+    const $tbody = $('#ausenciasBody');
+    $tbody.empty();
 
     absences.forEach(abs => {
-      const tr = document.createElement('tr');
       let actions = '';
-
       if (tabStatus === 'pending') {
+        // Buttons to approve/reject pending absences
         actions = `
           <button class="btn btn-success btn-sm me-2"
             onclick="updateAbsenceStatus(${abs.id_ausencia}, 'approved')">Approve</button>
@@ -461,25 +446,30 @@ async function loadAbsences(tabStatus) {
             onclick="updateAbsenceStatus(${abs.id_ausencia}, 'rejected')">Reject</button>
         `;
       } else {
+        // Display badge for approved/rejected absences
         const badgeColor = tabStatus === 'approved' ? 'success' : 'danger';
         actions = `<span class="badge bg-${badgeColor}">${tabStatus}</span>`;
       }
 
-      tr.innerHTML = `
-        <td>${abs.id_usuario}</td>
-        <td>${abs.tipo}</td>
-        <td>${new Date(abs.fecha_inicio).toLocaleDateString()}</td>
-        <td>${new Date(abs.fecha_fin).toLocaleDateString()}</td>
-        <td>${abs.comentario || ''}</td>
-        <td>${actions}</td>
-      `;
-      tbody.appendChild(tr);
+      const $row = $(`
+        <tr>
+          <td>${abs.id_usuario}</td>
+          <td>${abs.tipo}</td>
+          <td>${new Date(abs.fecha_inicio).toLocaleDateString()}</td>
+          <td>${new Date(abs.fecha_fin).toLocaleDateString()}</td>
+          <td>${abs.comentario || ''}</td>
+          <td>${actions}</td>
+        </tr>
+      `);
+
+      $tbody.append($row.hide().fadeIn(300)); // Fade-in animation for UX
     });
   } catch (err) {
     console.error('Error loading absences:', err);
   }
 }
 
+// Update absence status (approve/reject) via API
 window.updateAbsenceStatus = async function(id, newStatus) {
   try {
     const res = await fetch(`/api/ausencias/${id}`, {
@@ -489,15 +479,11 @@ window.updateAbsenceStatus = async function(id, newStatus) {
     });
 
     let data = {};
-    try {
-      data = await res.json();
-    } catch (e) {
-      console.warn('Could not parse response as JSON');
-    }
+    try { data = await res.json(); } catch (e) { console.warn('Could not parse response as JSON'); }
 
     if (res.ok) {
       alert(data.mensaje || 'Status updated successfully');
-      loadAbsences(currentStatus); // currentStatus is global
+      loadAbsences(currentStatus); // Reload table after update
     } else {
       alert(`Error: ${data.error || 'Unknown error'}`);
     }
