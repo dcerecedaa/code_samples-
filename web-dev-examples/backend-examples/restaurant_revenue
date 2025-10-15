@@ -1,0 +1,101 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+class RestaurantRevenue
+{
+    // ----- Inner class representing a Menu Item -----
+    class MenuItem
+    {
+        public string Name { get; set; }
+        public double Price { get; set; }
+        public int TotalSold { get; set; }
+
+        public MenuItem(string name, double price)
+        {
+            Name = name;
+            Price = price;
+            TotalSold = 0;
+        }
+
+        public double GetRevenue()
+        {
+            return TotalSold * Price;
+        }
+    }
+
+    static void Main()
+    {
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+        Console.WriteLine("🍽️ Restaurant Order and Revenue Simulation\n");
+
+        // ----- Create menu -----
+        List<MenuItem> menu = new List<MenuItem>
+        {
+            new MenuItem("Burger", 8.50),
+            new MenuItem("Pizza", 11.00),
+            new MenuItem("Pasta", 9.00),
+            new MenuItem("Salad", 6.50),
+            new MenuItem("Taco", 7.00)
+        };
+
+        int days = 7; // simulate one week
+        Random rand = new Random();
+
+        // Store daily sales (Day -> Meal -> Quantity)
+        Dictionary<string, Dictionary<string, int>> dailySales = new Dictionary<string, Dictionary<string, int>>();
+
+        // ----- Simulation -----
+        for (int day = 1; day <= days; day++)
+        {
+            var todaySales = new Dictionary<string, int>();
+
+            foreach (var item in menu)
+            {
+                int soldToday = rand.Next(5, 21); // between 5 and 20 orders
+                todaySales[item.Name] = soldToday;
+                item.TotalSold += soldToday;
+            }
+
+            dailySales.Add("Day " + day, todaySales);
+        }
+
+        // ----- Display daily results -----
+        Console.WriteLine("📅 Daily Sales Summary:\n");
+        Console.WriteLine("{0,-8} {1,8} {2,8} {3,8} {4,8} {5,8}", "Day", "Burger", "Pizza", "Pasta", "Salad", "Taco");
+        Console.WriteLine(new string('-', 60));
+
+        foreach (var day in dailySales)
+        {
+            var d = day.Value;
+            Console.WriteLine("{0,-8} {1,8} {2,8} {3,8} {4,8} {5,8}",
+                day.Key,
+                d["Burger"], d["Pizza"], d["Pasta"], d["Salad"], d["Taco"]);
+        }
+
+        // ----- Weekly revenue summary -----
+        Console.WriteLine("\n💰 Weekly Revenue Summary:\n");
+        Console.WriteLine("{0,-10} {1,15} {2,15}", "Item", "Total Sold", "Revenue ($)");
+        Console.WriteLine(new string('-', 40));
+
+        double totalRevenue = 0;
+        MenuItem topItem = null;
+
+        foreach (var item in menu)
+        {
+            double revenue = item.GetRevenue();
+            totalRevenue += revenue;
+
+            Console.WriteLine("{0,-10} {1,15} {2,15:F2}", item.Name, item.TotalSold, revenue);
+
+            if (topItem == null || revenue > topItem.GetRevenue())
+                topItem = item;
+        }
+
+        // ----- Final results -----
+        Console.WriteLine("\nBest-selling item: " + topItem.Name + 
+                          $" with ${topItem.GetRevenue():F2} in revenue.");
+        Console.WriteLine($"Total weekly revenue: ${totalRevenue:F2}");
+        Console.WriteLine("\nSimulation completed successfully.");
+    }
+}
