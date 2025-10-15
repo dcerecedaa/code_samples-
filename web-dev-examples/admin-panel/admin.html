@@ -1,1 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administrator Panel</title>
+  <link 
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
+    rel="stylesheet"
+  >
+  <!-- Static files served from /admin/ -->
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar navigation -->
+      <nav class="col-md-3 sidebar">
+        <h3 class="text-center text-white mb-4">Admin Panel</h3>
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a href="#" class="nav-link has-submenu text-white" id="submenuToggle">Schedule</a>
+            <ul class="submenu list-unstyled ps-3" id="submenuSchedule">
+              <li><a href="#" class="nav-link text-white" data-section="schedule-view">View</a></li>
+              <li><a href="#" class="nav-link text-white" data-section="schedule-manage">Manage</a></li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="#" data-section="absences">Absences</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-section="user-creation">User Creation</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-section="user-deletion">User Deletion</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-section="user-modification">Modify User</a>
+          </li>
+        </ul>
+      </nav>
 
+      <!-- Main content area -->
+      <main class="col-md-9 content">
+
+        <!-- Schedule: View -->
+        <section id="schedule-view" class="section-content">
+          <h2 class="section-title">Schedule</h2>
+          <p>View and manage employees' schedules.</p>
+          <div class="table-responsive">
+            <table class="table table-bordered" id="adminScheduleTable">
+              <thead>
+                <tr>
+                  <th>ID</th><th>Name</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th>
+                  <th>Thursday</th><th>Friday</th><th>Saturday</th><th>Sunday</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Schedule: Manage -->
+        <section id="schedule-manage" class="section-content">
+          <h2 class="section-title">Manage Schedules</h2>
+          <p>Create, modify, or delete employee schedules.</p>
+
+          <!-- Create Schedule -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5>Create Schedule</h5>
+              <form id="form-create-schedule">
+                <div class="row">
+                  <div class="mb-3 col-md-4">
+                    <label class="form-label">Employee</label>
+                    <select class="form-select" id="select-employee" name="employee_id" required></select>
+                  </div>
+                  <div class="mb-3 col-md-4">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" class="form-control" name="start_date" required />
+                  </div>
+                  <div class="mb-3 col-md-4">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="end_date" />
+                  </div>
+                </div>
+
+                <div class="row">
+                  <!-- Days of the week -->
+                  <div class="mb-3 col-md-4"><label class="form-label">Monday</label><input type="text" class="form-control" name="monday" placeholder="e.g., 08:00-15:00 or Off" required /></div>
+                  <div class="mb-3 col-md-4"><label class="form-label">Tuesday</label><input type="text" class="form-control" name="tuesday" placeholder="e.g., 08:00-15:00 or Off" required /></div>
+                  <div class="mb-3 col-md-4"><label class="form-label">Wednesday</label><input type="text" class="form-control" name="wednesday" placeholder="e.g., 08:00-15:00 or Off" required /></div>
+                  <div class="mb-3 col-md-4"><label class="form-label">Thursday</label><input type="text" class="form-control" name="thursday" placeholder="e.g., 08:00-15:00 or Off" required /></div>
+                  <div class="mb-3 col-md-4"><label class="form-label">Friday</label><input type="text" class="form-control" name="friday" placeholder="e.g., 08:00-15:00 or Off" required /></div>
+                  <div class="mb-3 col-md-4"><label class="form-label">Saturday</label><input type="text" class="form-control" name="saturday" placeholder="e.g., 08:00-15:00 or Off" required /></div>
+                  <div class="mb-3 col-md-4"><label class="form-label">Sunday</label><input type="text" class="form-control" name="sunday" placeholder="e.g., 08:00-15:00 or Off" required /></div>
+                </div>
+
+                <button type="submit" class="btn btn-success">Create Schedule</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Modify Schedule -->
+          <h2 class="section-title">Modify Schedule</h2>
+          <p>Form to modify an employee's schedule.</p>
+          <div class="card mb-4">
+            <div class="card-body">
+              <form class="form-modify-schedule">
+                <div class="mb-3">
+                  <label for="scheduleIdModify" class="form-label">
+                    Select Schedule (ID)
+                  </label>
+                  <select class="form-select" id="scheduleIdModify" required></select>
+                </div>
+
+                <div class="mb-3">
+                  <label for="dayModify" class="form-label">Day</label>
+                  <select id="dayModify" class="form-select" required>
+                    <option value="" selected>Select day...</option>
+                    <option value="monday">Monday</option>
+                    <option value="tuesday">Tuesday</option>
+                    <option value="wednesday">Wednesday</option>
+                    <option value="thursday">Thursday</option>
+                    <option value="friday">Friday</option>
+                    <option value="saturday">Saturday</option>
+                    <option value="sunday">Sunday</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label for="newSchedule" class="form-label">New Schedule</label>
+                  <input
+                    type="text"
+                    id="newSchedule"
+                    class="form-control"
+                    placeholder="e.g., 09:00-17:00"
+                    required
+                  >
+                </div>
+
+                <button type="submit" class="btn btn-info">
+                  Modify Schedule
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Delete Schedule -->
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5>Delete Schedule</h5>
+              <form id="form-delete-schedule">
+                <div class="mb-3">
+                  <label class="form-label">Schedule ID to Delete</label>
+                  <select class="form-select" id="select-delete-schedule" required></select>
+                </div>
+                <button type="submit" class="btn btn-danger">Delete</button>
+                <p id="msgDeleteSchedule" class="mt-2"></p>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: Absences -->
+        <section id="absences" class="section-content active">
+          <h2 class="section-title">Absences</h2>
+          <div class="card mb-4">
+            <div class="card-body">
+              <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                  <a class="nav-link active" href="#" data-status="pending">Pending</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#" data-status="approved">Approved</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#" data-status="rejected">Rejected</a>
+                </li>
+              </ul>
+
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Employee</th>
+                      <th>Type</th>
+                      <th>Start Date</th>
+                      <th>End Date</th>
+                      <th>Comment</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="absencesBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: User Creation -->
+        <section id="user-creation" class="section-content">
+          <h2 class="section-title">Create Users</h2>
+          <p>Form to register new employees.</p>
+          <div class="card mb-4">
+            <div class="card-body">
+              <form class="form-user-create">
+                <div class="mb-3">
+                  <label for="userNameCreate" class="form-label">Name</label>
+                  <input 
+                    type="text" class="form-control" id="userNameCreate" 
+                    placeholder="Enter full name" required
+                  >
+                </div>
+                <div class="mb-3">
+                  <label for="userEmailCreate" class="form-label">Email</label>
+                  <input 
+                    type="email" class="form-control" id="userEmailCreate" 
+                    placeholder="example@email.com" required
+                  >
+                </div>
+                <div class="mb-3">
+                  <label for="userPasswordCreate" class="form-label">Password</label>
+                  <input 
+                    type="password" class="form-control" id="userPasswordCreate" 
+                    placeholder="Enter password" required
+                  >
+                </div>
+                <div class="mb-3">
+                  <label for="userStartDate" class="form-label">Start Date</label>
+                  <input 
+                    type="date" class="form-control" id="userStartDate" 
+                    required
+                  >
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  Create User
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: User Deletion -->
+        <section id="user-deletion" class="section-content">
+          <h2 class="section-title">Delete Users</h2>
+          <p>Options to remove existing employees.</p>
+          <div class="card mb-4">
+            <div class="card-body">
+              <form class="form-user-delete">
+                <div class="mb-3">
+                  <label for="userIdDelete" class="form-label">User ID</label>
+                  <input 
+                    type="text" class="form-control" id="userIdDelete" 
+                    placeholder="Enter user ID" required
+                  >
+                </div>
+                <div class="mb-3">
+                  <label for="userNameDelete" class="form-label">User Name</label>
+                  <input 
+                    type="text" class="form-control" id="userNameDelete" 
+                    placeholder="Enter user name" required
+                  >
+                </div>
+                <div class="mb-3">
+                  <label for="userEmailDelete" class="form-label">Email</label>
+                  <input 
+                    type="email" class="form-control" id="userEmailDelete" 
+                    placeholder="example@email.com" required
+                  >
+                </div>
+                <button type="submit" class="btn btn-warning">
+                  Delete User
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: User Modification -->
+        <section id="user-modification" class="section-content">
+          <h2 class="section-title">Modify Users</h2>
+          <p>Form to edit existing employee details.</p>
+          <div class="card mb-4">
+            <div class="card-body">
+              <form class="form-user-modify">
+                <div class="mb-3">
+                  <label for="selectUserModify" class="form-label">
+                    Select User
+                  </label>
+                  <select class="form-select" id="selectUserModify"></select>
+                </div>
+                <div class="mb-3">
+                  <label for="newUserName" class="form-label">New Name</label>
+                  <input 
+                    type="text" class="form-control" id="newUserName" 
+                    placeholder="New name" required
+                  >
+                </div>
+                <button type="submit" class="btn btn-info">
+                  Modify User 
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>  
+      </main>
+    </div>
+  </div>
+  <!-- JavaScript served from Express static /admin/ -->
+  <script src="admin.js"></script>
+</body>
+</html>
