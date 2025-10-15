@@ -1,0 +1,104 @@
+import java.util.*;
+
+public class EmployeeProductivity {
+
+    // ----- Inner class representing an employee -----
+    static class Employee {
+        String name;
+        int tasksCompleted;
+        int hoursWorked;
+
+        Employee(String name) {
+            this.name = name;
+            this.tasksCompleted = 0;
+            this.hoursWorked = 0;
+        }
+
+        // Calculate efficiency (tasks per hour)
+        double getEfficiency() {
+            return hoursWorked == 0 ? 0 : (double) tasksCompleted / hoursWorked;
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("🏢 Employee Productivity Simulation\n");
+
+        // ----- Create employee list -----
+        List<Employee> employees = new ArrayList<>();
+        employees.add(new Employee("Ana"));
+        employees.add(new Employee("Carlos"));
+        employees.add(new Employee("Lucia"));
+        employees.add(new Employee("David"));
+        employees.add(new Employee("Maria"));
+
+        // ----- Simulation setup -----
+        int days = 5;  // simulate 5 workdays
+        Random rand = new Random();
+
+        // Daily productivity record (Day -> Employee -> Tasks)
+        Map<String, Map<String, Integer>> dailyTasks = new LinkedHashMap<>();
+
+        // ----- Simulation loop -----
+        for (int day = 1; day <= days; day++) {
+            Map<String, Integer> tasksToday = new LinkedHashMap<>();
+
+            for (Employee e : employees) {
+                int hours = rand.nextInt(3, 9);  // between 3 and 8 hours
+                int tasks = rand.nextInt(5, 16); // between 5 and 15 tasks
+
+                e.tasksCompleted += tasks;
+                e.hoursWorked += hours;
+
+                tasksToday.put(e.name, tasks);
+            }
+
+            dailyTasks.put("Day " + day, tasksToday);
+        }
+
+        // ----- Display daily results -----
+        System.out.println("📅 Tasks completed each day:\n");
+        System.out.printf("%-10s %-10s %-10s %-10s %-10s %-10s%n",
+                "Day", "Ana", "Carlos", "Lucia", "David", "Maria");
+        System.out.println("-------------------------------------------------------------");
+
+        for (String day : dailyTasks.keySet()) {
+            Map<String, Integer> dayTasks = dailyTasks.get(day);
+            System.out.printf("%-10s %-10d %-10d %-10d %-10d %-10d%n",
+                    day,
+                    dayTasks.get("Ana"),
+                    dayTasks.get("Carlos"),
+                    dayTasks.get("Lucia"),
+                    dayTasks.get("David"),
+                    dayTasks.get("Maria"));
+        }
+
+        // ----- Weekly summary -----
+        System.out.println("\n📊 Weekly Productivity Summary:\n");
+        System.out.printf("%-10s %-15s %-15s %-15s%n", "Employee", "Total Tasks", "Total Hours", "Efficiency");
+        System.out.println("----------------------------------------------------------");
+
+        Employee topEmployee = null;
+        double maxEfficiency = 0;
+
+        // Display each employee’s performance
+        for (Employee e : employees) {
+            System.out.printf("%-10s %-15d %-15d %-15.2f%n",
+                    e.name, e.tasksCompleted, e.hoursWorked, e.getEfficiency());
+
+            // Track most efficient employee
+            if (e.getEfficiency() > maxEfficiency) {
+                maxEfficiency = e.getEfficiency();
+                topEmployee = e;
+            }
+        }
+
+        // ----- Final results -----
+        System.out.println("\nMost efficient employee: " + topEmployee.name +
+                " with an efficiency of " + String.format("%.2f", topEmployee.getEfficiency()) + " tasks/hour");
+
+        double avgTasks = employees.stream().mapToInt(e -> e.tasksCompleted).average().orElse(0);
+        System.out.printf("Average tasks per employee: %.2f%n", avgTasks);
+
+        System.out.println("\nSimulation completed successfully.");
+    }
+}
